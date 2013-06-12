@@ -1,6 +1,8 @@
 package info.vividcode.webapp.vcbookmark;
 
-import java.util.ArrayList;
+import info.vividcode.webapp.vcbookmark.db.DatabaseInitializer;
+
+import java.sql.SQLException;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -13,21 +15,25 @@ import javax.ws.rs.core.Response;
 @Path("/")
 public class BookmarkEngine {
 
+    private DatabaseInitializer mDbManager = new DatabaseInitializer();
+
     @GET
     @Produces("application/json")
     @Path("bookmarks")
-    public Response getBookmarks() {
-        List<BookmarkBean> bookmarks = new ArrayList<BookmarkBean>();
-        BookmarkBean bookmark = new BookmarkBean("http://www.vividcode.info/");
-        bookmarks.add(bookmark);
+    public Response getBookmarks() throws SQLException {
+        List<BookmarkBean> bookmarks = mDbManager.operateDatabase(DatabaseInitializer.selectAllBookmarks, null);
         return Response.ok().entity(bookmarks).build();
     }
 
     @POST
     @Consumes("application/json")
     @Path("bookmark")
-    public Response createBookmark(BookmarkBean input) {
-        System.out.println(input.getUrl());
-        return Response.ok().build();
+    public Response createBookmark(BookmarkBean input) throws SQLException {
+        boolean res = mDbManager.operateDatabase(DatabaseInitializer.insertBookmark, input);
+        if (res) {
+            return Response.ok().build();
+        } else {
+            return Response.serverError().build();
+        }
     }
 }
